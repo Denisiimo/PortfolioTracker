@@ -3,15 +3,10 @@
     public class Transaction
     {
         public int Id { get; set; }
-
-        public string side { get; set; }
-
-        public decimal quantity { get; set; }
-
-        public decimal price { get; set; }
-
-        public DateTime date { get; set; }
-
-        public CurrencyList currencyList { get; set; }
+        public string Side { get; set; }
+        public decimal Quantity { get; set; }
+        public decimal Price { get; set; }
+        public DateTime Date { get; set; }
+        public CurrencyList CurrencyList { get; set; }
     }
 }
