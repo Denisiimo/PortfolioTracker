@@ -193,9 +193,6 @@ namespace PortfolioTracker.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("TEXT");
-
                     b.Property<decimal>("Quantity")
                         .HasColumnType("TEXT");
 

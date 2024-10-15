@@ -11,7 +11,7 @@ using PortfolioTracker.Context;
 namespace PortfolioTracker.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20241010082237_InitialCreate")]
+    [Migration("20241014092205_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -194,9 +194,6 @@ namespace PortfolioTracker.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("Price")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("Quantity")

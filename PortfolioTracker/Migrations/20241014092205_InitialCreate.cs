@@ -202,7 +202,6 @@ namespace PortfolioTracker.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Side = table.Column<string>(type: "TEXT", nullable: false),
                     Quantity = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Price = table.Column<decimal>(type: "TEXT", nullable: false),
                     Date = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CurrencyListId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
