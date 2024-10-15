@@ -8,6 +8,9 @@ using PortfolioTracker.Model;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<CurrencyProvider>();
+builder.Services.AddScoped<DatabaseSeeder>();
+
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
@@ -24,13 +27,16 @@ builder.Services.AddAuthentication(options =>
 .AddIdentityCookies();
 
 builder.Services.AddDbContext<DatabaseContext>();
-builder.Services.AddScoped<CurrencyProvider>();
 
 builder.Services.AddIdentityCore<User>()
     .AddEntityFrameworkStores<DatabaseContext>()
     .AddSignInManager();
 
 var app = builder.Build();
+
+using var scope = app.Services.CreateScope();
+var seeder = scope.ServiceProvider.GetService<DatabaseSeeder>();
+await seeder!.Seed();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

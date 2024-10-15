@@ -11,7 +11,7 @@ using PortfolioTracker.Context;
 namespace PortfolioTracker.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20241014092205_InitialCreate")]
+    [Migration("20241015172350_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

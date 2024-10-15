@@ -24,6 +24,12 @@ namespace PortfolioTracker.Model
             await _context.SaveChangesAsync();
         }
 
+        public async Task RemoveCurrencyAsync(Currency currency)
+        {
+            _context.Currencies.Remove(currency);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task UpdateCurrencyAsync(Currency currency)
         {
             _context.Currencies.Update(currency);

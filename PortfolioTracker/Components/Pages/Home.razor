@@ -1,6 +1,87 @@
-﻿@page "/"
+﻿@page "/";
+@using Binance.Spot
+@using Newtonsoft.Json.Linq
+
+@inject CurrencyProvider CurrencyProvider;
 
 <PageTitle>Home</PageTitle>
 
-<h1></h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Currency</th>
+            <th scope="col">Current-Price</th>
+            <th scope="col">Buying-Price</th>
+            <th scope="col">Buying-Balance</th>
+            <th scope="col">Current-Balance</th>
+            <th scope="col">Gain/Loss</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var currency in currencies)
+        {
+            <tr>
+                <th>@currency.Id</th>
+                <td>@currency.CurrencyName</td>
+                <td>@(livePrices.ContainsKey(currency.CurrencyName) ? "$"+livePrices[currency.CurrencyName] : "Loading...")</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
 
+@code {
+    private IEnumerable<Currency> currencies;
+    private Dictionary<string, string> livePrices = new Dictionary<string, string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch all currencies from the database
+        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
+
+        // Create WebSocket for every currency to stream prices
+        foreach (var currency in currencies)
+        {
+            var currencyName = currency.CurrencyName.ToLower();  // Ensure lowercase for WebSocket format
+            var websocket = new MarketDataWebSocket($"{currencyName}usdt@aggTrade");
+
+            websocket.OnMessageReceived(
+                async (data) =>
+                {
+                    // Strips out only the price from received data about the currency
+                    JObject jsonData = JObject.Parse(data);
+                    var livePriceString = (string)jsonData["p"];
+
+                    // Parse the live price as a decimal and round to 3 decimal places
+                    if (decimal.TryParse(livePriceString, out var livePrice))
+                    {
+                        decimal roundedLivePrice;
+
+                        if (livePrice >= 1)
+                        {
+                            roundedLivePrice = Math.Round(livePrice, 2);
+                        }
+                        else if (livePrice < 1 && livePrice >= 0.01M)
+                        {
+                            roundedLivePrice = Math.Round(livePrice, 4);
+                        }
+                        else
+                        {
+                            roundedLivePrice = Math.Round(livePrice, 8);
+                        }
+                        // var roundedLivePrice = Math.Round(livePrice, 3);
+
+                        livePrices[currency.CurrencyName] = roundedLivePrice.ToString();
+                    }
+
+                    await InvokeAsync(StateHasChanged);
+                }, CancellationToken.None);
+
+            await websocket.ConnectAsync(CancellationToken.None);
+        }
+    }
+}
