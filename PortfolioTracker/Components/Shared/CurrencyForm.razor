@@ -1,2 +1,106 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using System.ComponentModel.DataAnnotations
+@using PortfolioTracker.Components.Layout
+@inject TransactionProvider TransactionProvider
 @inject CurrencyProvider CurrencyProvider
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@Model" OnValidSubmit="@HandleSubmit">
+    <DataAnnotationsValidator />
+    <div class="card">
+        <div class="form-group mb-2">
+            <label for="name">Currency Name</label>
+            <InputText id="name" class="form-control" @bind-Value="@Model.CurrencyName" placeholder="CurrencyName" />
+            <div class="small">
+                <ValidationMessage For="@(() => Model.CurrencyName)" />
+            </div>
+        </div>
+        <div class="form-group mb-2">
+            <label for="quantity">Quantity</label>
+            <InputNumber id="quantity" class="form-control" @bind-Value="@Model.Quantity" placeholder="Quantity" />
+            <div class="small">
+                <ValidationMessage For="@(() => Model.Quantity)" />
+            </div>
+        </div>
+        <div class="form-group mb-2">
+            <label for="buying-price">Buying price</label>
+            <InputNumber id="buying-price" class="form-control" @bind-Value="@Model.BuyingPrice" placeholder="BuyingPrice" />
+            <div class="small">
+                <ValidationMessage For="@(() => Model.BuyingPrice)" />
+            </div>
+        </div>
+        <div class="mt-auto">
+            <button type="submit" class="btn btn-outline-primary w-100">Add</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public EventCallback OnCurrencyAdded { get; set; }
+
+    [Parameter]
+    public Currency? Currency { get; set; }
+
+    [Parameter]
+    public Transaction? Transaction { get; set; }
+
+    private CurrencyModel Model { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Model = Currency is null ? new CurrencyModel() : new CurrencyModel(Currency, Transaction);
+        base.OnParametersSet();
+    }
+
+    private async Task HandleSubmit()
+    {
+        var currency = Currency ?? new Currency();
+        var transaction = Transaction ?? new Transaction();
+
+        currency.CurrencyName = Model.CurrencyName;
+        transaction.Quantity = Model.Quantity;
+        transaction.BuyingPrice = Model.BuyingPrice;
+
+        // Save the currency
+        if (currency.Id == 0)
+        {
+            await CurrencyProvider.AddCurrencyAsync(currency);
+            Model = new CurrencyModel();
+
+            // await OnCurrencyAdded.InvokeAsync(null);
+        } 
+
+        // Save the transaction
+        if (transaction.Id == 0)
+        {
+            transaction.Id = currency.Id;
+            await TransactionProvider.AddTransactionAsync(transaction);
+        }
+
+        await OnCurrencyAdded.InvokeAsync(null);
+    }
+
+    private sealed class CurrencyModel
+    {
+        [Required(ErrorMessage = "Please enter the name of the currency.")]
+        public string CurrencyName { get; set; } = "";
+
+        [Required(ErrorMessage = "Please enter the quantity.")]
+        public decimal Quantity { get; set; }
+
+        [Required(ErrorMessage = "Please enter the buying price of the currency.")]
+        public decimal BuyingPrice { get; set; }
+
+        public CurrencyModel()
+        {
+            
+        }
+
+        public CurrencyModel(Currency currency, Transaction transaction)
+        {
+            CurrencyName = currency.CurrencyName;
+            Quantity = transaction.Quantity;
+            BuyingPrice = transaction.BuyingPrice;
+        }
+    }
+}

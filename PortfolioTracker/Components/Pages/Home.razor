@@ -1,10 +1,13 @@
 ﻿@page "/";
 @using Binance.Spot
 @using Newtonsoft.Json.Linq
+@using PortfolioTracker.Components.Shared
 
 @inject CurrencyProvider CurrencyProvider;
 
 <PageTitle>Home</PageTitle>
+
+<CurrencyForm OnCurrencyAdded="@RefreshCurrencies" />
 
 <table class="table">
     <thead>
@@ -35,13 +38,14 @@
 </table>
 
 @code {
+
     private IEnumerable<Currency> currencies;
+
     private Dictionary<string, string> livePrices = new Dictionary<string, string>();
 
     protected override async Task OnInitializedAsync()
     {
-        // Fetch all currencies from the database
-        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
+        await LoadCurrencies();
 
         // Create WebSocket for every currency to stream prices
         foreach (var currency in currencies)
@@ -81,7 +85,18 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-            await websocket.ConnectAsync(CancellationToken.None);
+            // await websocket.ConnectAsync(CancellationToken.None);
         }
+    }
+
+    private async Task RefreshCurrencies()
+    {
+        await LoadCurrencies();
+        StateHasChanged(); // Ensure the UI updates
+    }
+
+    private async Task LoadCurrencies() // Fetch all currencies from the database
+    {
+        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
     }
 }

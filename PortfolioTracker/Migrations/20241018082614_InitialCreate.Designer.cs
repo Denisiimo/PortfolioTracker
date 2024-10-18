@@ -11,7 +11,7 @@ using PortfolioTracker.Context;
 namespace PortfolioTracker.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20241015172350_InitialCreate")]
+    [Migration("20241018082614_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -189,6 +189,9 @@ namespace PortfolioTracker.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("BuyingPrice")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("CurrencyListId")
                         .HasColumnType("INTEGER");

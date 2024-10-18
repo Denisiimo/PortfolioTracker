@@ -187,6 +187,9 @@ namespace PortfolioTracker.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("BuyingPrice")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("CurrencyListId")
                         .HasColumnType("INTEGER");
 

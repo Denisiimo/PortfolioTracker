@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddScoped<CurrencyProvider>();
+builder.Services.AddScoped<TransactionProvider>();
 builder.Services.AddScoped<DatabaseSeeder>();
 
 builder.Services.AddRazorComponents()
