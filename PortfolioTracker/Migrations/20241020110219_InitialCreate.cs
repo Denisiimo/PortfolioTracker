@@ -64,6 +64,22 @@ namespace PortfolioTracker.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Transactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Side = table.Column<string>(type: "TEXT", nullable: false),
+                    BuyingAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    BuyingPrice = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Date = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transactions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -170,49 +186,33 @@ namespace PortfolioTracker.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CurrenciesLists",
+                name: "CurrencyLists",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     UserId = table.Column<string>(type: "TEXT", nullable: true),
-                    CurrencyId = table.Column<int>(type: "INTEGER", nullable: false)
+                    CurrencyId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TransactionId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CurrenciesLists", x => x.Id);
+                    table.PrimaryKey("PK_CurrencyLists", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CurrenciesLists_AspNetUsers_UserId",
+                        name: "FK_CurrencyLists_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_CurrenciesLists_Currencies_CurrencyId",
+                        name: "FK_CurrencyLists_Currencies_CurrencyId",
                         column: x => x.CurrencyId,
                         principalTable: "Currencies",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Transactions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Side = table.Column<string>(type: "TEXT", nullable: false),
-                    Quantity = table.Column<decimal>(type: "TEXT", nullable: false),
-                    BuyingPrice = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CurrencyListId = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Transactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Transactions_CurrenciesLists_CurrencyListId",
-                        column: x => x.CurrencyListId,
-                        principalTable: "CurrenciesLists",
+                        name: "FK_CurrencyLists_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -255,19 +255,19 @@ namespace PortfolioTracker.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CurrenciesLists_CurrencyId",
-                table: "CurrenciesLists",
+                name: "IX_CurrencyLists_CurrencyId",
+                table: "CurrencyLists",
                 column: "CurrencyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CurrenciesLists_UserId",
-                table: "CurrenciesLists",
-                column: "UserId");
+                name: "IX_CurrencyLists_TransactionId",
+                table: "CurrencyLists",
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_CurrencyListId",
-                table: "Transactions",
-                column: "CurrencyListId");
+                name: "IX_CurrencyLists_UserId",
+                table: "CurrencyLists",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -289,19 +289,19 @@ namespace PortfolioTracker.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Transactions");
+                name: "CurrencyLists");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "CurrenciesLists");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Currencies");
+
+            migrationBuilder.DropTable(
+                name: "Transactions");
         }
     }
 }

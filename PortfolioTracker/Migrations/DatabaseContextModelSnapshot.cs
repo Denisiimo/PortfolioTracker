@@ -169,6 +169,9 @@ namespace PortfolioTracker.Migrations
                     b.Property<int>("CurrencyId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TransactionId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("UserId")
                         .HasColumnType("TEXT");
 
@@ -176,9 +179,11 @@ namespace PortfolioTracker.Migrations
 
                     b.HasIndex("CurrencyId");
 
+                    b.HasIndex("TransactionId");
+
                     b.HasIndex("UserId");
 
-                    b.ToTable("CurrenciesLists");
+                    b.ToTable("CurrencyLists");
                 });
 
             modelBuilder.Entity("PortfolioTracker.Model.Transaction", b =>
@@ -187,16 +192,13 @@ namespace PortfolioTracker.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("BuyingAmount")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("BuyingPrice")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CurrencyListId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("Quantity")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Side")
@@ -204,8 +206,6 @@ namespace PortfolioTracker.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyListId");
 
                     b.ToTable("Transactions");
                 });
@@ -333,24 +333,21 @@ namespace PortfolioTracker.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PortfolioTracker.Model.Transaction", "Transaction")
+                        .WithMany("CurrencyLists")
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("PortfolioTracker.Model.User", "User")
                         .WithMany("CurrencyLists")
                         .HasForeignKey("UserId");
 
                     b.Navigation("Currency");
 
+                    b.Navigation("Transaction");
+
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("PortfolioTracker.Model.Transaction", b =>
-                {
-                    b.HasOne("PortfolioTracker.Model.CurrencyList", "CurrencyList")
-                        .WithMany("Transactions")
-                        .HasForeignKey("CurrencyListId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CurrencyList");
                 });
 
             modelBuilder.Entity("PortfolioTracker.Model.Currency", b =>
@@ -358,9 +355,9 @@ namespace PortfolioTracker.Migrations
                     b.Navigation("CurrencyLists");
                 });
 
-            modelBuilder.Entity("PortfolioTracker.Model.CurrencyList", b =>
+            modelBuilder.Entity("PortfolioTracker.Model.Transaction", b =>
                 {
-                    b.Navigation("Transactions");
+                    b.Navigation("CurrencyLists");
                 });
 
             modelBuilder.Entity("PortfolioTracker.Model.User", b =>

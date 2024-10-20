@@ -2,105 +2,152 @@
 @using PortfolioTracker.Components.Layout
 @inject TransactionProvider TransactionProvider
 @inject CurrencyProvider CurrencyProvider
+@inject CurrencyListProvider CurrencyListProvider
 @inject NavigationManager NavigationManager
 
 <EditForm Model="@Model" OnValidSubmit="@HandleSubmit">
     <DataAnnotationsValidator />
-    <div class="card">
-        <div class="form-group mb-2">
-            <label for="name">Currency Name</label>
-            <InputText id="name" class="form-control" @bind-Value="@Model.CurrencyName" placeholder="CurrencyName" />
-            <div class="small">
-                <ValidationMessage For="@(() => Model.CurrencyName)" />
-            </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Add Currency</h4>
         </div>
-        <div class="form-group mb-2">
-            <label for="quantity">Quantity</label>
-            <InputNumber id="quantity" class="form-control" @bind-Value="@Model.Quantity" placeholder="Quantity" />
-            <div class="small">
-                <ValidationMessage For="@(() => Model.Quantity)" />
+
+        <div class="card-body bg-light">
+            <div class="form-group mb-3">
+                <label for="name" class="form-label">Currency Name</label>
+                <InputText id="name" class="form-control" @bind-Value="Model.CurrencyName" placeholder="Enter currency name" />
+                <ValidationMessage For="@(() => Model.CurrencyName)" class="text-danger small" />
             </div>
-        </div>
-        <div class="form-group mb-2">
-            <label for="buying-price">Buying price</label>
-            <InputNumber id="buying-price" class="form-control" @bind-Value="@Model.BuyingPrice" placeholder="BuyingPrice" />
-            <div class="small">
-                <ValidationMessage For="@(() => Model.BuyingPrice)" />
+
+            <div class="form-group mb-3">
+                <label for="buyingAmount" class="form-label">Buying Amount</label>
+                <InputNumber id="buyingAmount" class="form-control" @bind-Value="Model.BuyingAmount" placeholder="Enter amount" />
+                <ValidationMessage For="@(() => Model.BuyingAmount)" class="text-danger small" />
             </div>
-        </div>
-        <div class="mt-auto">
-            <button type="submit" class="btn btn-outline-primary w-100">Add</button>
+
+            <div class="form-group mb-3">
+                <label for="price" class="form-label">Buying Price</label>
+                <InputNumber id="price" class="form-control" @bind-Value="Model.BuyingPrice" placeholder="Enter price" />
+                <ValidationMessage For="@(() => Model.BuyingPrice)" class="text-danger small" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="side" class="form-label">Side</label>
+                <InputSelect id="side" class="form-control" @bind-Value="Model.Side">
+                    <option value="">
+                        Select Side...
+                    </option>
+                    <option value="Buy">Buy</option>
+                    <option value="Sell" disabled>Sell</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => Model.Side)" class="text-danger small" />
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary btn-lg w-100">Add Currency</button>
+            </div>
         </div>
     </div>
 </EditForm>
 
 @code {
-    [Parameter]
-    public EventCallback OnCurrencyAdded { get; set; }
-
-    [Parameter]
-    public Currency? Currency { get; set; }
+    public CurrencyList? CurrencyList { get; set; }
 
     [Parameter]
     public Transaction? Transaction { get; set; }
 
-    private CurrencyModel Model { get; set; }
+    [Parameter]
+    public Currency? Currency { get; set; }
+
+    private TransactionCurrencyModel Model { get; set; }
 
     protected override void OnParametersSet()
     {
-        Model = Currency is null ? new CurrencyModel() : new CurrencyModel(Currency, Transaction);
+        Model = (Transaction == null && Currency == null && CurrencyList == null)
+            ? new TransactionCurrencyModel()
+            : new TransactionCurrencyModel(Transaction, Currency, CurrencyList);
+
         base.OnParametersSet();
     }
 
     private async Task HandleSubmit()
     {
-        var currency = Currency ?? new Currency();
         var transaction = Transaction ?? new Transaction();
+        var currency = Currency ?? new Currency();
+        var currencyList = new CurrencyList
+            {
+                Currency = currency,
+                Transaction = transaction
+            };
+
+        transaction.Side = Model.Side;
+        transaction.BuyingAmount = Model.BuyingAmount;
+        transaction.BuyingPrice = Model.BuyingPrice;
+        transaction.Date = DateTime.Now;
 
         currency.CurrencyName = Model.CurrencyName;
-        transaction.Quantity = Model.Quantity;
-        transaction.BuyingPrice = Model.BuyingPrice;
 
-        // Save the currency
+        if (transaction.Id == 0)
+        {
+            await TransactionProvider.AddTransactionAsync(transaction);
+        }
+        else
+        {
+            await TransactionProvider.UpdateTransactionAsync(transaction);
+        }
+
         if (currency.Id == 0)
         {
             await CurrencyProvider.AddCurrencyAsync(currency);
-            Model = new CurrencyModel();
-
-            // await OnCurrencyAdded.InvokeAsync(null);
-        } 
-
-        // Save the transaction
-        if (transaction.Id == 0)
+        }
+        else
         {
-            transaction.Id = currency.Id;
-            await TransactionProvider.AddTransactionAsync(transaction);
+            await CurrencyProvider.UpdateCurrencyAsync(currency);
         }
 
-        await OnCurrencyAdded.InvokeAsync(null);
+        if (currencyList.Id == 0)
+        {
+            await CurrencyListProvider.AddCurrencyListAsync(currencyList);
+        }
+        else
+        {
+            await CurrencyListProvider.UpdateCurrencyListAsync(currencyList);
+        }
+
+        Model = new TransactionCurrencyModel();
+        // NavigationManager.NavigateTo("/");
     }
 
-    private sealed class CurrencyModel
+    private sealed class TransactionCurrencyModel
     {
-        [Required(ErrorMessage = "Please enter the name of the currency.")]
+        [Required(ErrorMessage = "Please enter the currency name.")]
         public string CurrencyName { get; set; } = "";
 
-        [Required(ErrorMessage = "Please enter the quantity.")]
-        public decimal Quantity { get; set; }
+        [Required(ErrorMessage = "Please enter the side of the transaction.")]
+        public string Side { get; set; } = "";
 
-        [Required(ErrorMessage = "Please enter the buying price of the currency.")]
+        [Required(ErrorMessage = "Please enter the buying amount.")]
+        [Range(0.001, double.MaxValue, ErrorMessage = "Buying amount must be greater than 0.")]
+        public decimal BuyingAmount { get; set; }
+
+        [Required(ErrorMessage = "Please enter the buying price.")]
+        [Range(0.001, double.MaxValue, ErrorMessage = "Buying amount must be greater than 0.")]
         public decimal BuyingPrice { get; set; }
 
-        public CurrencyModel()
-        {
-            
-        }
+        [Required(ErrorMessage = "Please enter the date.")]
+        public DateTime Date { get; set; }
 
-        public CurrencyModel(Currency currency, Transaction transaction)
+        public TransactionCurrencyModel()
         {
-            CurrencyName = currency.CurrencyName;
-            Quantity = transaction.Quantity;
+        }
+        public TransactionCurrencyModel(Transaction transaction, Currency currency, CurrencyList currencyList)
+        {
+            Side = transaction.Side;
+            BuyingAmount = transaction.BuyingAmount;
             BuyingPrice = transaction.BuyingPrice;
+            Date = transaction.Date;
+            CurrencyName = currency.CurrencyName;
         }
     }
 }

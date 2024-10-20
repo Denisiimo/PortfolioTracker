@@ -4,48 +4,93 @@
 @using PortfolioTracker.Components.Shared
 
 @inject CurrencyProvider CurrencyProvider;
+@inject CurrencyListProvider CurrencyListProvider;
 
 <PageTitle>Home</PageTitle>
 
-<CurrencyForm OnCurrencyAdded="@RefreshCurrencies" />
+<CurrencyForm />
 
-<table class="table">
-    <thead>
+<table class="table table-hover table-bordered align-middle mt-3">
+    <thead class="table-dark">
         <tr>
             <th scope="col">#</th>
             <th scope="col">Currency</th>
-            <th scope="col">Current-Price</th>
-            <th scope="col">Buying-Price</th>
-            <th scope="col">Buying-Balance</th>
-            <th scope="col">Current-Balance</th>
-            <th scope="col">Gain/Loss</th>
+            <th scope="col">Currency Price</th>
+            <th scope="col">Buying Balance</th>
+            <th scope="col">Current Balance</th>
+            <th scope="col" class="text-center">
+                <span class="text-success">Gain</span>/<span class="text-danger">Loss</span>
+            </th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var currency in currencies)
+        @if (currencyLists != null && currencyLists.Any())
+        {
+            foreach (var currencyList in currencyLists)
+            {
+                if (currencyList?.Currency != null && currencyList?.Transaction != null)
+                {
+                    decimal livePrice = livePrices.ContainsKey(currencyList.Currency.CurrencyName)
+                    ? System.Convert.ToDecimal(livePrices[currencyList.Currency.CurrencyName])
+                    : 0;
+                    decimal currentBalance = livePrice > 0
+                    ? (currencyList.Transaction.BuyingAmount / currencyList.Transaction.BuyingPrice) * livePrice
+                    : 0;
+                    decimal gainLoss = livePrice > 0 ? currentBalance - currencyList.Transaction.BuyingAmount : 0;
+
+                    <tr>
+                        <th scope="row">@currencyList.Id</th>
+                        <td>@currencyList.Currency.CurrencyName</td>
+                        <td>@(livePrice > 0 ? $"${livePrice}" : "Loading...")</td>
+                        <td>@($"${currencyList.Transaction.BuyingAmount}")</td>
+                        <td>
+                            @if (livePrice > 0)
+                            {
+                                @($"${Math.Round(currentBalance, 2)}")
+                            }
+                            else
+                            {
+                                <span>Loading...</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @if (livePrice > 0)
+                            {
+                                <span class="@((gainLoss >= 0) ? "bg-success text-white p-1 rounded" : "bg-danger text-white p-1 rounded")">
+                                    @("$"+Math.Round(gainLoss, 2))
+                                </span>
+                            }
+                            else
+                            {
+                                <span>Loading...</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        else
         {
             <tr>
-                <th>@currency.Id</th>
-                <td>@currency.CurrencyName</td>
-                <td>@(livePrices.ContainsKey(currency.CurrencyName) ? "$"+livePrices[currency.CurrencyName] : "Loading...")</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td colspan="7" class="text-center">No currencies available.</td>
             </tr>
         }
     </tbody>
 </table>
 
 @code {
-
     private IEnumerable<Currency> currencies;
+
+    // private IEnumerable<Transaction> transactions;
+
+    private IEnumerable<CurrencyList> currencyLists;
 
     private Dictionary<string, string> livePrices = new Dictionary<string, string>();
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadCurrencies();
+        currencyLists = await CurrencyListProvider.GetAllCurrencyListsAsync();
+        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
 
         // Create WebSocket for every currency to stream prices
         foreach (var currency in currencies)
@@ -85,18 +130,7 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-            // await websocket.ConnectAsync(CancellationToken.None);
+            await websocket.ConnectAsync(CancellationToken.None);
         }
-    }
-
-    private async Task RefreshCurrencies()
-    {
-        await LoadCurrencies();
-        StateHasChanged(); // Ensure the UI updates
-    }
-
-    private async Task LoadCurrencies() // Fetch all currencies from the database
-    {
-        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
     }
 }

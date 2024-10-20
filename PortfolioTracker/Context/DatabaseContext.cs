@@ -9,7 +9,7 @@ namespace PortfolioTracker.Context
         private IWebHostEnvironment _environment;
 
         public DbSet<Currency> Currencies { get; set; }
-        public DbSet<CurrencyList> CurrenciesLists { get; set; }
+        public DbSet<CurrencyList> CurrencyLists { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionbuilder)
