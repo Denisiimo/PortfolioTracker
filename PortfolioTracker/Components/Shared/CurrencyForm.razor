@@ -52,6 +52,9 @@
 </EditForm>
 
 @code {
+    [Parameter]
+    public EventCallback OnCurrencyAdded { get; set; }
+
     public CurrencyList? CurrencyList { get; set; }
 
     [Parameter]
@@ -117,6 +120,8 @@
 
         Model = new TransactionCurrencyModel();
         // NavigationManager.NavigateTo("/");
+
+        await OnCurrencyAdded.InvokeAsync();
     }
 
     private sealed class TransactionCurrencyModel

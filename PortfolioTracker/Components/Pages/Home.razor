@@ -8,7 +8,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<CurrencyForm />
+<CurrencyForm OnCurrencyAdded="@LoadCurrencies" />
 
 <table class="table table-hover table-bordered align-middle mt-3">
     <thead class="table-dark">
@@ -21,11 +21,13 @@
             <th scope="col" class="text-center">
                 <span class="text-success">Gain</span>/<span class="text-danger">Loss</span>
             </th>
+            <th>Edit</th>
         </tr>
     </thead>
     <tbody>
         @if (currencyLists != null && currencyLists.Any())
         {
+            int listId = 0;
             foreach (var currencyList in currencyLists)
             {
                 if (currencyList?.Currency != null && currencyList?.Transaction != null)
@@ -39,7 +41,7 @@
                     decimal gainLoss = livePrice > 0 ? currentBalance - currencyList.Transaction.BuyingAmount : 0;
 
                     <tr>
-                        <th scope="row">@currencyList.Id</th>
+                        <th scope="row">@(listId += 1)</th>
                         <td>@currencyList.Currency.CurrencyName</td>
                         <td>@(livePrice > 0 ? $"${livePrice}" : "Loading...")</td>
                         <td>@($"${currencyList.Transaction.BuyingAmount}")</td>
@@ -65,7 +67,12 @@
                                 <span>Loading...</span>
                             }
                         </td>
+                        <td class="d-flex justify-content-between">
+                            <button class="btn btn-danger btn-sm w-50" @onclick="() => RemoveCurrency(currencyList.Id)">Sell</button>
+                            <button class="btn btn-primary btn-sm w-50" @onclick="() => EditCurrency(currencyList.Id)">Edit</button>
+                        </td>
                     </tr>
+                    
                 }
             }
         }
@@ -89,8 +96,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        currencyLists = await CurrencyListProvider.GetAllCurrencyListsAsync();
-        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
+        await LoadCurrencies();
 
         // Create WebSocket for every currency to stream prices
         foreach (var currency in currencies)
@@ -130,7 +136,23 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-            await websocket.ConnectAsync(CancellationToken.None);
+            // await websocket.ConnectAsync(CancellationToken.None);
         }
+    }
+
+    private async Task LoadCurrencies()
+    {
+        currencyLists = await CurrencyListProvider.GetAllCurrencyListsAsync();
+        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
+    }
+
+    private async Task RemoveCurrency(int currencyListId)
+    {
+        await CurrencyListProvider.RemoveCurrencyListAsync(currencyListId);
+    }
+
+    private async Task EditCurrency(int currencyListId)
+    {
+        await CurrencyListProvider.EditCurrencyListAsync(currencyListId);
     }
 }

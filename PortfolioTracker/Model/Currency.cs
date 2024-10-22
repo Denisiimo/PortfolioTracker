@@ -1,4 +1,6 @@
-﻿namespace PortfolioTracker.Model
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace PortfolioTracker.Model
 {
     public class Currency
     {
