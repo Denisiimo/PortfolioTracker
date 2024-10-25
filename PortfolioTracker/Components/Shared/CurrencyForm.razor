@@ -5,6 +5,8 @@
 @inject CurrencyListProvider CurrencyListProvider
 @inject NavigationManager NavigationManager
 
+
+
 <EditForm Model="@Model" OnValidSubmit="@HandleSubmit">
     <DataAnnotationsValidator />
 
@@ -14,24 +16,29 @@
         </div>
 
         <div class="card-body bg-light">
+
+            @* Currency Name *@
             <div class="form-group mb-3">
                 <label for="name" class="form-label">Currency Name</label>
                 <InputText id="name" class="form-control" @bind-Value="Model.CurrencyName" placeholder="Enter currency name" />
                 <ValidationMessage For="@(() => Model.CurrencyName)" class="text-danger small" />
             </div>
 
+            @* Buying Amount *@
             <div class="form-group mb-3">
                 <label for="buyingAmount" class="form-label">Buying Amount</label>
                 <InputNumber id="buyingAmount" class="form-control" @bind-Value="Model.BuyingAmount" placeholder="Enter amount" />
                 <ValidationMessage For="@(() => Model.BuyingAmount)" class="text-danger small" />
             </div>
 
+            @* Buying Price *@
             <div class="form-group mb-3">
                 <label for="price" class="form-label">Buying Price</label>
                 <InputNumber id="price" class="form-control" @bind-Value="Model.BuyingPrice" placeholder="Enter price" />
                 <ValidationMessage For="@(() => Model.BuyingPrice)" class="text-danger small" />
             </div>
 
+            @* Side *@
             <div class="form-group mb-3">
                 <label for="side" class="form-label">Side</label>
                 <InputSelect id="side" class="form-control" @bind-Value="Model.Side">
@@ -43,15 +50,15 @@
                 </InputSelect>
                 <ValidationMessage For="@(() => Model.Side)" class="text-danger small" />
             </div>
-
             <div class="mt-4">
-                <button type="submit" class="btn btn-primary btn-lg w-100">Add Currency</button>
+                <button type="submit" class="btn btn-primary float-start">@(Model.Id == 0 ? "Add Currency" : "Save Changes")</button>
             </div>
         </div>
     </div>
 </EditForm>
 
 @code {
+
     [Parameter]
     public EventCallback OnCurrencyAdded { get; set; }
 
@@ -68,9 +75,9 @@
     protected override void OnParametersSet()
     {
         Model = (Transaction == null && Currency == null && CurrencyList == null)
-            ? new TransactionCurrencyModel()
-            : new TransactionCurrencyModel(Transaction, Currency, CurrencyList);
-
+            ? new TransactionCurrencyModel() // If doesn't exist, make new
+            : new TransactionCurrencyModel(Transaction, Currency, CurrencyList); // If does exist, assign the values
+            
         base.OnParametersSet();
     }
 
@@ -90,6 +97,8 @@
         transaction.Date = DateTime.Now;
 
         currency.CurrencyName = Model.CurrencyName;
+
+        currencyList.Id = Model.Id;
 
         if (transaction.Id == 0)
         {
@@ -126,6 +135,9 @@
 
     private sealed class TransactionCurrencyModel
     {
+        [Required]
+        public int Id { get; set; }
+
         [Required(ErrorMessage = "Please enter the currency name.")]
         public string CurrencyName { get; set; } = "";
 
@@ -153,6 +165,7 @@
             BuyingPrice = transaction.BuyingPrice;
             Date = transaction.Date;
             CurrencyName = currency.CurrencyName;
+            Id = currencyList.Id;
         }
     }
 }

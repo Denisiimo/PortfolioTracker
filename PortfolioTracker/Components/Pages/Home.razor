@@ -6,6 +6,8 @@
 @inject CurrencyProvider CurrencyProvider;
 @inject CurrencyListProvider CurrencyListProvider;
 
+@rendermode InteractiveServer
+
 <PageTitle>Home</PageTitle>
 
 <CurrencyForm OnCurrencyAdded="@LoadCurrencies" />
