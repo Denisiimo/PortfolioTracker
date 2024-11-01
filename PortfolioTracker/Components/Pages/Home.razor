@@ -10,7 +10,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<CurrencyForm OnCurrencyAdded="@LoadCurrencies" />
+<CurrencyForm @ref="currencyForm" OnCurrencyAdded="@LoadCurrencies" />
 
 <table class="table table-hover table-bordered align-middle mt-3">
     <thead class="table-dark">
@@ -61,7 +61,7 @@
                             @if (livePrice > 0)
                             {
                                 <span class="@((gainLoss >= 0) ? "bg-success text-white p-1 rounded" : "bg-danger text-white p-1 rounded")">
-                                    @("$"+Math.Round(gainLoss, 2))
+                                    @("$" + Math.Round(gainLoss, 2))
                                 </span>
                             }
                             else
@@ -74,7 +74,6 @@
                             <button class="btn btn-primary btn-sm w-50" @onclick="() => EditCurrency(currencyList.Id)">Edit</button>
                         </td>
                     </tr>
-                    
                 }
             }
         }
@@ -88,49 +87,39 @@
 </table>
 
 @code {
+    private CurrencyForm currencyForm;
+
     private IEnumerable<Currency> currencies;
-
-    // private IEnumerable<Transaction> transactions;
-
     private IEnumerable<CurrencyList> currencyLists;
-
     private Dictionary<string, string> livePrices = new Dictionary<string, string>();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadCurrencies();
+    }
 
-        // Create WebSocket for every currency to stream prices
+    private async Task LoadCurrencies()
+    {
+        currencyLists = await CurrencyListProvider.GetAllCurrencyListsAsync();
+        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
+
         foreach (var currency in currencies)
         {
-            var currencyName = currency.CurrencyName.ToLower();  // Ensure lowercase for WebSocket format
-            var websocket = new MarketDataWebSocket($"{currencyName}usdt@aggTrade");
+            if (!livePrices.ContainsKey(currency.CurrencyName))
+            {
+                var currencyName = currency.CurrencyName.ToLower();
+                var websocket = new MarketDataWebSocket($"{currencyName}usdt@aggTrade");
 
-            websocket.OnMessageReceived(
-                async (data) =>
+                websocket.OnMessageReceived(async (data) =>
                 {
-                    // Strips out only the price from received data about the currency
                     JObject jsonData = JObject.Parse(data);
                     var livePriceString = (string)jsonData["p"];
 
-                    // Parse the live price as a decimal and round to 3 decimal places
                     if (decimal.TryParse(livePriceString, out var livePrice))
                     {
-                        decimal roundedLivePrice;
-
-                        if (livePrice >= 1)
-                        {
-                            roundedLivePrice = Math.Round(livePrice, 2);
-                        }
-                        else if (livePrice < 1 && livePrice >= 0.01M)
-                        {
-                            roundedLivePrice = Math.Round(livePrice, 4);
-                        }
-                        else
-                        {
-                            roundedLivePrice = Math.Round(livePrice, 8);
-                        }
-                        // var roundedLivePrice = Math.Round(livePrice, 3);
+                        decimal roundedLivePrice = livePrice >= 1
+                            ? Math.Round(livePrice, 2)
+                            : livePrice >= 0.01M ? Math.Round(livePrice, 4) : Math.Round(livePrice, 8);
 
                         livePrices[currency.CurrencyName] = roundedLivePrice.ToString();
                     }
@@ -138,23 +127,27 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-            // await websocket.ConnectAsync(CancellationToken.None);
+                await websocket.ConnectAsync(CancellationToken.None);
+            }
         }
-    }
 
-    private async Task LoadCurrencies()
-    {
-        currencyLists = await CurrencyListProvider.GetAllCurrencyListsAsync();
-        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
+        StateHasChanged();
     }
 
     private async Task RemoveCurrency(int currencyListId)
     {
         await CurrencyListProvider.RemoveCurrencyListAsync(currencyListId);
+        await LoadCurrencies();
     }
 
     private async Task EditCurrency(int currencyListId)
     {
-        await CurrencyListProvider.EditCurrencyListAsync(currencyListId);
+        var currencyList = await CurrencyListProvider.GetCurrencyListByIdAsync(currencyListId);
+        if (currencyList != null)
+        {
+            await currencyForm.SetModelAsync(currencyList.Transaction, currencyList.Currency, currencyList);
+            StateHasChanged();
+        }
     }
 }
+

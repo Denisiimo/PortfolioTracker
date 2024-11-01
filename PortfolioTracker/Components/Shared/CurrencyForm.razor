@@ -5,36 +5,33 @@
 @inject CurrencyListProvider CurrencyListProvider
 @inject NavigationManager NavigationManager
 
-
-
 <EditForm Model="@Model" OnValidSubmit="@HandleSubmit">
     <DataAnnotationsValidator />
 
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Add Currency</h4>
+            <h4 class="mb-0">@(Model.Id == 0 ? "Add Currency" : "Edit Currency")</h4>
         </div>
 
         <div class="card-body bg-light">
-
             @* Currency Name *@
             <div class="form-group mb-3">
                 <label for="name" class="form-label">Currency Name</label>
-                <InputText id="name" class="form-control" @bind-Value="Model.CurrencyName" placeholder="Enter currency name" />
+                <InputText id="name" class="form-control" @bind-Value="Model.CurrencyName" placeholder="Enter currency name" autocomplete="off" disabled="@(Model.Id != 0)" />
                 <ValidationMessage For="@(() => Model.CurrencyName)" class="text-danger small" />
             </div>
 
             @* Buying Amount *@
             <div class="form-group mb-3">
                 <label for="buyingAmount" class="form-label">Buying Amount</label>
-                <InputNumber id="buyingAmount" class="form-control" @bind-Value="Model.BuyingAmount" placeholder="Enter amount" />
+                <InputNumber id="buyingAmount" class="form-control" @bind-Value="Model.BuyingAmount" placeholder="Enter amount" autocomplete="off" />
                 <ValidationMessage For="@(() => Model.BuyingAmount)" class="text-danger small" />
             </div>
 
             @* Buying Price *@
             <div class="form-group mb-3">
                 <label for="price" class="form-label">Buying Price</label>
-                <InputNumber id="price" class="form-control" @bind-Value="Model.BuyingPrice" placeholder="Enter price" />
+                <InputNumber id="price" class="form-control" @bind-Value="Model.BuyingPrice" placeholder="Enter price" autocomplete="off" />
                 <ValidationMessage For="@(() => Model.BuyingPrice)" class="text-danger small" />
             </div>
 
@@ -42,9 +39,7 @@
             <div class="form-group mb-3">
                 <label for="side" class="form-label">Side</label>
                 <InputSelect id="side" class="form-control" @bind-Value="Model.Side">
-                    <option value="">
-                        Select Side...
-                    </option>
+                    <option value="">Select Side...</option>
                     <option value="Buy">Buy</option>
                     <option value="Sell" disabled>Sell</option>
                 </InputSelect>
@@ -58,9 +53,8 @@
 </EditForm>
 
 @code {
-
     [Parameter]
-    public EventCallback OnCurrencyAdded { get; set; }
+    public EventCallback<Task> OnCurrencyAdded { get; set; }
 
     public CurrencyList? CurrencyList { get; set; }
 
@@ -70,66 +64,68 @@
     [Parameter]
     public Currency? Currency { get; set; }
 
-    private TransactionCurrencyModel Model { get; set; }
+    private TransactionCurrencyModel Model { get; set; } = new TransactionCurrencyModel();
 
-    protected override void OnParametersSet()
+    public async Task SetModelAsync(Transaction transaction, Currency currency, CurrencyList currencyList)
     {
-        Model = (Transaction == null && Currency == null && CurrencyList == null)
-            ? new TransactionCurrencyModel() // If doesn't exist, make new
-            : new TransactionCurrencyModel(Transaction, Currency, CurrencyList); // If does exist, assign the values
-            
-        base.OnParametersSet();
+        Transaction = transaction;
+        Currency = currency;
+        CurrencyList = currencyList;
+
+        Model = new TransactionCurrencyModel(transaction, currency, currencyList);
     }
 
     private async Task HandleSubmit()
     {
-        var transaction = Transaction ?? new Transaction();
-        var currency = Currency ?? new Currency();
-        var currencyList = new CurrencyList
-            {
-                Currency = currency,
-                Transaction = transaction
-            };
-
-        transaction.Side = Model.Side;
-        transaction.BuyingAmount = Model.BuyingAmount;
-        transaction.BuyingPrice = Model.BuyingPrice;
-        transaction.Date = DateTime.Now;
-
-        currency.CurrencyName = Model.CurrencyName;
-
-        currencyList.Id = Model.Id;
-
-        if (transaction.Id == 0)
+        // Check if we are editing an existing currency
+        if (Model.Id > 0)
         {
-            await TransactionProvider.AddTransactionAsync(transaction);
+            // Retrieve existing records based on the ID
+            var existingCurrency = await CurrencyProvider.GetCurrencyByIdAsync(Model.Id);
+            var existingTransaction = await TransactionProvider.GetTransactionByIdAsync(CurrencyList.Transaction.Id);
+
+            // Update fields with new values
+            existingCurrency.CurrencyName = Model.CurrencyName;
+            existingTransaction.Side = Model.Side;
+            existingTransaction.BuyingAmount = Model.BuyingAmount;
+            existingTransaction.BuyingPrice = Model.BuyingPrice;
+            existingTransaction.Date = DateTime.Now; // Update the date if needed
+
+            // Update records in the database
+            await CurrencyProvider.UpdateCurrencyAsync(existingCurrency);
+            await TransactionProvider.UpdateTransactionAsync(existingTransaction);
         }
         else
         {
-            await TransactionProvider.UpdateTransactionAsync(transaction);
-        }
+            // Create new instances for Transaction and Currency
+            var transaction = new Transaction
+                {
+                    Side = Model.Side,
+                    BuyingAmount = Model.BuyingAmount,
+                    BuyingPrice = Model.BuyingPrice,
+                    Date = DateTime.Now
+                };
 
-        if (currency.Id == 0)
-        {
+            var currency = new Currency
+                {
+                    CurrencyName = Model.CurrencyName
+                };
+
+            // Create CurrencyList to associate Currency and Transaction
+            var currencyList = new CurrencyList
+                {
+                    Currency = currency,
+                    Transaction = transaction
+                };
+
             await CurrencyProvider.AddCurrencyAsync(currency);
-        }
-        else
-        {
-            await CurrencyProvider.UpdateCurrencyAsync(currency);
-        }
-
-        if (currencyList.Id == 0)
-        {
+            await TransactionProvider.AddTransactionAsync(transaction);
             await CurrencyListProvider.AddCurrencyListAsync(currencyList);
-        }
-        else
-        {
-            await CurrencyListProvider.UpdateCurrencyListAsync(currencyList);
         }
 
         Model = new TransactionCurrencyModel();
-        // NavigationManager.NavigateTo("/");
 
+        // Notify to update the list
         await OnCurrencyAdded.InvokeAsync();
     }
 
@@ -149,15 +145,14 @@
         public decimal BuyingAmount { get; set; }
 
         [Required(ErrorMessage = "Please enter the buying price.")]
-        [Range(0.001, double.MaxValue, ErrorMessage = "Buying amount must be greater than 0.")]
+        [Range(0.001, double.MaxValue, ErrorMessage = "Buying price must be greater than 0.")]
         public decimal BuyingPrice { get; set; }
 
         [Required(ErrorMessage = "Please enter the date.")]
         public DateTime Date { get; set; }
 
-        public TransactionCurrencyModel()
-        {
-        }
+        public TransactionCurrencyModel() { }
+
         public TransactionCurrencyModel(Transaction transaction, Currency currency, CurrencyList currencyList)
         {
             Side = transaction.Side;

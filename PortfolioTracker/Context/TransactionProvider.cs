@@ -18,6 +18,12 @@ namespace PortfolioTracker.Model
             return await _context.Transactions.ToListAsync();
         }
 
+        public async Task<Transaction?> GetTransactionByIdAsync(int id)
+        {
+            return await _context.Transactions
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
         public async Task AddTransactionAsync(Transaction transaction)
         {
             _context.Transactions.Add(transaction);

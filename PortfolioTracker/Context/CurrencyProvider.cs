@@ -18,6 +18,12 @@ namespace PortfolioTracker.Model
             return await _context.Currencies.ToListAsync();
         }
 
+        public async Task<Currency?> GetCurrencyByIdAsync(int id)
+        {
+            return await _context.Currencies
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
         public async Task AddCurrencyAsync (Currency currency)
         {
             _context.Currencies.Add(currency);
