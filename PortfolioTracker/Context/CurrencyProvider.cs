@@ -24,11 +24,17 @@ namespace PortfolioTracker.Model
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task AddCurrencyAsync (Currency currency)
+        public async Task AddCurrencyAsync(Currency currency)
         {
+            // Check if a currency with the same name already exists
+            bool currencyExists = await _context.Currencies
+                .AnyAsync(c => c.CurrencyName.Equals(currency.CurrencyName, StringComparison.OrdinalIgnoreCase));
+
+            // If the currency does not exist, add it to the database
             _context.Currencies.Add(currency);
             await _context.SaveChangesAsync();
         }
+
 
         public async Task RemoveCurrencyAsync(Currency currency)
         {

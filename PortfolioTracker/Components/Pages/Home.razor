@@ -10,6 +10,8 @@
 
 <PageTitle>Home</PageTitle>
 
+<h1>Total value: @totalValue</h1>
+
 <CurrencyForm @ref="currencyForm" OnCurrencyAdded="@LoadCurrencies" />
 
 <table class="table table-hover table-bordered align-middle mt-3">
@@ -37,9 +39,13 @@
                     decimal livePrice = livePrices.ContainsKey(currencyList.Currency.CurrencyName)
                     ? System.Convert.ToDecimal(livePrices[currencyList.Currency.CurrencyName])
                     : 0;
+
                     decimal currentBalance = livePrice > 0
                     ? (currencyList.Transaction.BuyingAmount / currencyList.Transaction.BuyingPrice) * livePrice
                     : 0;
+
+                    totalValue += currentBalance;
+
                     decimal gainLoss = livePrice > 0 ? currentBalance - currencyList.Transaction.BuyingAmount : 0;
 
                     <tr>
@@ -87,6 +93,8 @@
 </table>
 
 @code {
+    decimal totalValue = 0;
+
     private CurrencyForm currencyForm;
 
     private IEnumerable<Currency> currencies;
@@ -127,7 +135,7 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-                await websocket.ConnectAsync(CancellationToken.None);
+                // await websocket.ConnectAsync(CancellationToken.None);
             }
         }
 
