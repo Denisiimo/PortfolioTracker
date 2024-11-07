@@ -5,54 +5,68 @@
 @inject CurrencyListProvider CurrencyListProvider
 @inject NavigationManager NavigationManager
 
-<EditForm Model="@Model" OnValidSubmit="@HandleSubmit">
-    <DataAnnotationsValidator />
+@if (closeForm == false)
+{
+    <EditForm Model="@Model" OnValidSubmit="@HandleSubmit">
+        <DataAnnotationsValidator />
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">@(Model.Id == 0 ? "Add Currency" : "Edit Currency")</h4>
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <h4 class="mb-0">@(Model.Id == 0 ? "Add Currency" : "Edit Currency")</h4>
+                <button type="button" class="btn btn-danger float-start" @onclick="CloseForm">X</button>
+            </div>
+
+            <div class="card-body bg-light">
+                @* Currency Name *@
+                <div class="form-group mb-3">
+                    <label for="name" class="form-label">Currency Name</label>
+                    <InputText id="name" class="form-control" @bind-Value="Model.CurrencyName" placeholder="Enter currency name" autocomplete="off" disabled="@(Model.Id != 0)" />
+                    <ValidationMessage For="@(() => Model.CurrencyName)" class="text-danger small" />
+                </div>
+
+                @* Buying Amount *@
+                <div class="form-group mb-3">
+                    <label for="buyingAmount" class="form-label">Buying Amount</label>
+                    <InputNumber id="buyingAmount" class="form-control" @bind-Value="Model.BuyingAmount" placeholder="Enter amount" autocomplete="off" />
+                    <ValidationMessage For="@(() => Model.BuyingAmount)" class="text-danger small" />
+                </div>
+
+                @* Buying Price *@
+                <div class="form-group mb-3">
+                    <label for="price" class="form-label">Buying Price</label>
+                    <InputNumber id="price" class="form-control" @bind-Value="Model.BuyingPrice" placeholder="Enter price" autocomplete="off" />
+                    <ValidationMessage For="@(() => Model.BuyingPrice)" class="text-danger small" />
+                </div>
+
+                @* Side *@
+                <div class="form-group mb-3">
+                    <label for="side" class="form-label">Side</label>
+                    <InputSelect id="side" class="form-control" @bind-Value="Model.Side">
+                        <option value="">Select Side...</option>
+                        <option value="Buy">Buy</option>
+                        <option value="Sell" disabled>Sell</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => Model.Side)" class="text-danger small" />
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary float-start">@(Model.Id == 0 ? "Add Currency" : "Save Changes")</button>
+                </div>
+            </div>
         </div>
-
-        <div class="card-body bg-light">
-            @* Currency Name *@
-            <div class="form-group mb-3">
-                <label for="name" class="form-label">Currency Name</label>
-                <InputText id="name" class="form-control" @bind-Value="Model.CurrencyName" placeholder="Enter currency name" autocomplete="off" disabled="@(Model.Id != 0)" />
-                <ValidationMessage For="@(() => Model.CurrencyName)" class="text-danger small" />
-            </div>
-
-            @* Buying Amount *@
-            <div class="form-group mb-3">
-                <label for="buyingAmount" class="form-label">Buying Amount</label>
-                <InputNumber id="buyingAmount" class="form-control" @bind-Value="Model.BuyingAmount" placeholder="Enter amount" autocomplete="off" />
-                <ValidationMessage For="@(() => Model.BuyingAmount)" class="text-danger small" />
-            </div>
-
-            @* Buying Price *@
-            <div class="form-group mb-3">
-                <label for="price" class="form-label">Buying Price</label>
-                <InputNumber id="price" class="form-control" @bind-Value="Model.BuyingPrice" placeholder="Enter price" autocomplete="off" />
-                <ValidationMessage For="@(() => Model.BuyingPrice)" class="text-danger small" />
-            </div>
-
-            @* Side *@
-            <div class="form-group mb-3">
-                <label for="side" class="form-label">Side</label>
-                <InputSelect id="side" class="form-control" @bind-Value="Model.Side">
-                    <option value="">Select Side...</option>
-                    <option value="Buy">Buy</option>
-                    <option value="Sell" disabled>Sell</option>
-                </InputSelect>
-                <ValidationMessage For="@(() => Model.Side)" class="text-danger small" />
-            </div>
-            <div class="mt-4">
-                <button type="submit" class="btn btn-primary float-start">@(Model.Id == 0 ? "Add Currency" : "Save Changes")</button>
-            </div>
-        </div>
-    </div>
-</EditForm>
+    </EditForm>
+}
 
 @code {
+    private bool closeForm = false;
+
+    [Parameter] public EventCallback<bool> OnFormClose { get; set; }
+
+    private void CloseForm()
+    {
+        closeForm = true;
+        OnFormClose.InvokeAsync(closeForm); // Notify to close the form
+    }
+
     [Parameter]
     public EventCallback<Task> OnCurrencyAdded { get; set; }
 

@@ -13,9 +13,17 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Total value: @totalValue</h1>
+<h1 class="d-flex justify-content-end">Total value: @totalValue</h1>
 
-<CurrencyForm @ref="currencyForm" OnCurrencyAdded="@LoadCurrencies" />
+@if (showBtn)
+{
+    <button type="button" class="btn btn-primary float-start mb-3" @onclick="ShowForm">Add Currency</button>
+}
+
+@if (showForm)
+{
+    <CurrencyForm @ref="currencyForm" OnFormClose="HandleFormClose" OnCurrencyAdded="@LoadCurrencies" />
+}
 
 <table class="table table-hover table-bordered align-middle mt-3">
     <thead class="table-dark">
@@ -96,6 +104,21 @@
 </table>
 
 @code {
+    private bool showForm = false;
+    private bool showBtn = true;
+
+    private void ShowForm()
+    {
+        showForm = true;
+        showBtn = false; 
+    }
+
+    private async Task HandleFormClose(bool isClosed)
+    {
+        showForm = false;
+        showBtn = true;   
+    }
+
     decimal totalValue = 0;
 
     private CurrencyForm currencyForm;
