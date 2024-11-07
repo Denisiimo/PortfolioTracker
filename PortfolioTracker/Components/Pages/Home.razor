@@ -1,5 +1,8 @@
 ﻿@page "/";
+@attribute [Authorize]
+
 @using Binance.Spot
+@using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json.Linq
 @using PortfolioTracker.Components.Shared
 
