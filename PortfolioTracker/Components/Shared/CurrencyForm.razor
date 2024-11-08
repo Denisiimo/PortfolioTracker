@@ -5,6 +5,7 @@
 @inject CurrencyListProvider CurrencyListProvider
 @inject NavigationManager NavigationManager
 
+
 @if (closeForm == false)
 {
     <EditForm Model="@Model" OnValidSubmit="@HandleSubmit">
@@ -57,7 +58,12 @@
 }
 
 @code {
-    private bool closeForm = false;
+    public bool closeForm = false;
+
+    public void UpdateCloseForm(bool value)
+    {
+        closeForm = value;
+    }
 
     [Parameter] public EventCallback<bool> OnFormClose { get; set; }
 
@@ -159,7 +165,7 @@
         public decimal BuyingAmount { get; set; }
 
         [Required(ErrorMessage = "Please enter the buying price.")]
-        [Range(0.001, double.MaxValue, ErrorMessage = "Buying price must be greater than 0.")]
+        [MinDoubleValue(0.0000001, ErrorMessage = "Buying price must be greater than 0.")]
         public decimal BuyingPrice { get; set; }
 
         [Required(ErrorMessage = "Please enter the date.")]

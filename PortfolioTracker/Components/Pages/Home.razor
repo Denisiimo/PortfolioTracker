@@ -13,7 +13,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1 class="d-flex justify-content-end">Total value: @totalValue</h1>
+<h1 class="d-flex justify-content-end">Total balance: @($"${Math.Round(totalValue, 2)}")</h1>
 
 @if (showBtn)
 {
@@ -54,8 +54,6 @@
                     decimal currentBalance = livePrice > 0
                     ? (currencyList.Transaction.BuyingAmount / currencyList.Transaction.BuyingPrice) * livePrice
                     : 0;
-
-                    totalValue += currentBalance;
 
                     decimal gainLoss = livePrice > 0 ? currentBalance - currencyList.Transaction.BuyingAmount : 0;
 
@@ -104,22 +102,29 @@
 </table>
 
 @code {
-    private bool showForm = false;
-    private bool showBtn = true;
+    private bool showForm = true;
+    private bool showBtn = false;
+
+    private decimal totalValue => currencyLists?.Where(c => c.Currency != null && c.Transaction != null)
+        .Sum(c =>
+        {
+            decimal livePrice = livePrices.ContainsKey(c.Currency.CurrencyName)
+                ? System.Convert.ToDecimal(livePrices[c.Currency.CurrencyName])
+                : 0;
+            return livePrice > 0 ? (c.Transaction.BuyingAmount / c.Transaction.BuyingPrice) * livePrice : 0;
+        }) ?? 0;
 
     private void ShowForm()
     {
         showForm = true;
-        showBtn = false; 
+        showBtn = false;
     }
 
     private async Task HandleFormClose(bool isClosed)
     {
         showForm = false;
-        showBtn = true;   
+        showBtn = true;
     }
-
-    decimal totalValue = 0;
 
     private CurrencyForm currencyForm;
 
@@ -161,7 +166,7 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-                // await websocket.ConnectAsync(CancellationToken.None);
+                await websocket.ConnectAsync(CancellationToken.None);
             }
         }
 
@@ -179,9 +184,20 @@
         var currencyList = await CurrencyListProvider.GetCurrencyListByIdAsync(currencyListId);
         if (currencyList != null)
         {
+            // Ensure the form is opened first
+            if (!showForm)
+            {
+                showForm = true;
+                showBtn = false;
+            }
+
+            await Task.Delay(10); // Makes a small delay
+
+            // Set the form model
             await currencyForm.SetModelAsync(currencyList.Transaction, currencyList.Currency, currencyList);
+
+            // Trigger UI update to reflect the newly set model
             StateHasChanged();
         }
     }
 }
-
