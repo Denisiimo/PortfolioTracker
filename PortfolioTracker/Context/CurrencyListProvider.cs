@@ -18,7 +18,21 @@ namespace PortfolioTracker.Model
             return await _context.CurrencyLists
                 .Include(x => x.Currency) 
                 .Include(x => x.Transaction) 
-                .ToListAsync();
+                .ToListAsync(); // Includes both Currency and Transaction tables and returns in a form of a list
+        }
+
+        public async Task UpdateCurrencyListAsync(CurrencyList currencyList)
+        {
+            _context.CurrencyLists.Update(currencyList);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<CurrencyList?> GetCurrencyListByIdAsync(int currencyListId)
+        {
+            return await _context.CurrencyLists
+                .Include(cl => cl.Currency)    // Include related Currency data
+                .Include(cl => cl.Transaction)  // Include related Transaction data
+                .FirstOrDefaultAsync(cl => cl.Id == currencyListId);
         }
 
         public async Task AddCurrencyListAsync(CurrencyList currencyList)
@@ -73,20 +87,6 @@ namespace PortfolioTracker.Model
 
                 }
             }
-        }
-
-        public async Task UpdateCurrencyListAsync(CurrencyList currencyList)
-        {
-            _context.CurrencyLists.Update(currencyList);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<CurrencyList?> GetCurrencyListByIdAsync(int currencyListId)
-        {
-            return await _context.CurrencyLists
-                .Include(cl => cl.Currency)    // Include related Currency data
-                .Include(cl => cl.Transaction)  // Include related Transaction data
-                .FirstOrDefaultAsync(cl => cl.Id == currencyListId);
         }
     }
 }

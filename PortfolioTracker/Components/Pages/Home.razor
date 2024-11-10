@@ -31,7 +31,7 @@
             <th scope="col">#</th>
             <th scope="col">Currency</th>
             <th scope="col">Currency Price</th>
-            <th scope="col">Buying Balance</th>
+            <th scope="col">Buying Amount</th>
             <th scope="col">Current Balance</th>
             <th scope="col" class="text-center">
                 <span class="text-success">Gain</span>/<span class="text-danger">Loss</span>
@@ -47,25 +47,25 @@
             {
                 if (currencyList?.Currency != null && currencyList?.Transaction != null)
                 {
-                    decimal livePrice = livePrices.ContainsKey(currencyList.Currency.CurrencyName)
+                    decimal livePrice = livePrices.ContainsKey(currencyList.Currency.CurrencyName) 
                     ? System.Convert.ToDecimal(livePrices[currencyList.Currency.CurrencyName])
-                    : 0;
+                    : 0; // Stores the live price for each currency
 
                     decimal currentBalance = livePrice > 0
                     ? (currencyList.Transaction.BuyingAmount / currencyList.Transaction.BuyingPrice) * livePrice
-                    : 0;
+                    : 0; // Calculates the current balance of each currency
 
-                    decimal gainLoss = livePrice > 0 ? currentBalance - currencyList.Transaction.BuyingAmount : 0;
+                    decimal gainLoss = livePrice > 0 ? currentBalance - currencyList.Transaction.BuyingAmount : 0; // Calculates whether the user is in a loss or profit
 
                     <tr>
-                        <th scope="row">@(listId += 1)</th>
-                        <td>@currencyList.Currency.CurrencyName</td>
-                        <td>@(livePrice > 0 ? $"${livePrice}" : "Loading...")</td>
+                        <th scope="row">@(listId += 1)</th> @* Displays IDs *@
+                        <td>@currencyList.Currency.CurrencyName</td> @* Displays currency names *@
+                        <td>@(livePrice > 0 ? $"${livePrice}" : "Loading...")</td> @* Displays the price *@
                         <td>@($"${currencyList.Transaction.BuyingAmount}")</td>
                         <td>
                             @if (livePrice > 0)
                             {
-                                @($"${Math.Round(currentBalance, 2)}")
+                                @($"${Math.Round(currentBalance, 2)}") @* Displays current balance *@
                             }
                             else
                             {
@@ -76,7 +76,7 @@
                             @if (livePrice > 0)
                             {
                                 <span class="@((gainLoss >= 0) ? "bg-success text-white p-1 rounded" : "bg-danger text-white p-1 rounded")">
-                                    @("$" + Math.Round(gainLoss, 2))
+                                    @("$" + Math.Round(gainLoss, 2)) @* Displays the profit in green and loss in red *@
                                 </span>
                             }
                             else
@@ -85,8 +85,8 @@
                             }
                         </td>
                         <td class="d-flex justify-content-between">
-                            <button class="btn btn-danger btn-sm w-50" @onclick="() => RemoveCurrency(currencyList.Id)">Sell</button>
-                            <button class="btn btn-primary btn-sm w-50" @onclick="() => EditCurrency(currencyList.Id)">Edit</button>
+                            <button class="btn btn-danger btn-sm w-50" @onclick="() => RemoveCurrency(currencyList.Id)">Sell</button> @* Sell option *@
+                            <button class="btn btn-primary btn-sm w-50" @onclick="() => EditCurrency(currencyList.Id)">Edit</button> @* Edit option*@
                         </td>
                     </tr>
                 }
@@ -146,17 +146,17 @@
         {
             if (!livePrices.ContainsKey(currency.CurrencyName))
             {
-                var currencyName = currency.CurrencyName.ToLower();
-                var websocket = new MarketDataWebSocket($"{currencyName}usdt@aggTrade");
+                var currencyName = currency.CurrencyName.ToLower(); // currency names stored in the database
+                var websocket = new MarketDataWebSocket($"{currencyName}usdt@aggTrade"); // request data about those currencies
 
                 websocket.OnMessageReceived(async (data) =>
                 {
                     JObject jsonData = JObject.Parse(data);
-                    var livePriceString = (string)jsonData["p"];
+                    var livePriceString = (string)jsonData["p"]; // p stands for price so only price is fetched
 
                     if (decimal.TryParse(livePriceString, out var livePrice))
                     {
-                        decimal roundedLivePrice = livePrice >= 1
+                        decimal roundedLivePrice = livePrice >= 1 // rounds the prices up
                             ? Math.Round(livePrice, 2)
                             : livePrice >= 0.01M ? Math.Round(livePrice, 4) : Math.Round(livePrice, 8);
 
@@ -166,7 +166,7 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-                // await websocket.ConnectAsync(CancellationToken.None);
+                await websocket.ConnectAsync(CancellationToken.None);
             }
         }
 
