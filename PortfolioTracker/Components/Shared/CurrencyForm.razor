@@ -20,28 +20,40 @@
             <div class="card-body bg-light">
                 @* Currency Name *@
                 <div class="form-group mb-3">
-                    <label for="name" class="form-label">Currency Name</label>
+                    <label for="name" class="form-label">
+                        Currency Name
+                    </label>
+                    <small class="form-text text-muted">(i) Enter the name of the currency. This field is disabled if editing an existing currency.</small>
                     <InputText id="name" class="form-control" @bind-Value="Model.CurrencyName" placeholder="Enter currency name" autocomplete="off" disabled="@(Model.Id != 0)" />
                     <ValidationMessage For="@(() => Model.CurrencyName)" class="text-danger small" />
                 </div>
 
                 @* Buying Amount *@
                 <div class="form-group mb-3">
-                    <label for="buyingAmount" class="form-label">Buying Amount</label>
+                    <label for="buyingAmount" class="form-label">
+                        Buying Amount
+                    </label>
+                    <small class="form-text text-muted">(i) Enter the amount you want to buy.</small>
                     <InputNumber id="buyingAmount" class="form-control" @bind-Value="Model.BuyingAmount" placeholder="Enter amount" autocomplete="off" />
                     <ValidationMessage For="@(() => Model.BuyingAmount)" class="text-danger small" />
                 </div>
 
                 @* Buying Price *@
                 <div class="form-group mb-3">
-                    <label for="price" class="form-label">Buying Price</label>
+                    <label for="price" class="form-label">
+                        Buying Price
+                    </label>
+                    <small class="form-text text-muted">(i) Enter the price at which you're buying the currency.</small>
                     <InputNumber id="price" class="form-control" @bind-Value="Model.BuyingPrice" placeholder="Enter price" autocomplete="off" />
                     <ValidationMessage For="@(() => Model.BuyingPrice)" class="text-danger small" />
                 </div>
 
                 @* Side *@
                 <div class="form-group mb-3">
-                    <label for="side" class="form-label">Side</label>
+                    <label for="side" class="form-label">
+                        Side
+                    </label>
+                    <small class="form-text text-muted">(i) Select whether you're buying or selling the currency.</small>
                     <InputSelect id="side" class="form-control" @bind-Value="Model.Side">
                         <option value="">Select Side...</option>
                         <option value="Buy">Buy</option>
@@ -49,12 +61,14 @@
                     </InputSelect>
                     <ValidationMessage For="@(() => Model.Side)" class="text-danger small" />
                 </div>
+
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary float-start">@(Model.Id == 0 ? "Add Currency" : "Save Changes")</button>
                 </div>
             </div>
         </div>
     </EditForm>
+
 }
 
 @code {
