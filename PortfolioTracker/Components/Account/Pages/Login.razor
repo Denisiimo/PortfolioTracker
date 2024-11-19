@@ -13,57 +13,35 @@
 <PageTitle>Log in</PageTitle>
 <StatusMessage Message="@statusMessage" IsError="@isError" />
 
-@* <div class="card">
-    <div class="card-body bg-light">
-        <h4 class="card-title">Login</h4>
-        <EditForm OnValidSubmit="LoginUser" Model="Model" FormName="loginForm">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label for="email" class="form-label">Email</label>
-                    <InputText @bind-Value="Model.Email" class="form-control" placeholder="name@example.com" />
-                </div>
-                <div class="col-md-6">
-                    <label for="password" class="form-label">Password</label>
-                    <InputText type="password" @bind-Value="Model.Password" class="form-control" placeholder="Password" />
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
-
-                </div>
-                <div class="col-md-2">
-                    <a href="@(NavigationManager.ToAbsoluteUri("Account/Register"))" class="btn btn-success w-100">Register</a>
-                </div>
-            </div>
-        </EditForm>
-    </div>
-</div> *@
-
 <EditForm OnValidSubmit="LoginUser" Model="Model" FormName="loginForm">
     <DataAnnotationsValidator />
-    <div class="row">
-        <div class="card w-100">
-            <h5 class="card-title">Login details</h5>
+    <div class="container" style="max-width: 800px; padding-top: 50px;">
+        <div class="card p-4 shadow-sm">
+            <h5 class="card-title text-center mb-4">Login</h5>
 
-            <div class="form-group mb-2">
+            <div class="form-group mb-3">
                 <label for="email">Email</label>
                 <InputText id="email" class="form-control" placeholder="you@example.com" @bind-Value="Model.Email" />
-                <div class="small">
-                    <ValidationMessage For="@(() => Model!.Email)" />
+                <div class="small text-danger">
+                    <ValidationMessage For="@(() => Model.Email)" />
                 </div>
             </div>
-            <div class="form-group mb-2">
+
+            <div class="form-group mb-3">
                 <label for="password">Password</label>
                 <InputText id="password" type="password" class="form-control" placeholder="Password" @bind-Value="Model.Password" />
-                <div class="small">
-                    <ValidationMessage For="@(() => Model!.Password)" />
+                <div class="small text-danger">
+                    <ValidationMessage For="@(() => Model.Password)" />
                 </div>
             </div>
-            <div class="mt-auto mb-2">
-                <button type="submit" class="btn btn-outline-primary w-100">Log In</button>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Log In</button>
             </div>
         </div>
     </div>
 </EditForm>
+
 
 @code {
     private string? statusMessage;
