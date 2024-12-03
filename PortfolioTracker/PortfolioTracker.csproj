@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\database\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

@@ -64,6 +64,20 @@ namespace PortfolioTracker.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Graphs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Value = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Date = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Graphs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Transactions",
                 columns: table => new
                 {
@@ -290,6 +304,9 @@ namespace PortfolioTracker.Migrations
 
             migrationBuilder.DropTable(
                 name: "CurrencyLists");
+
+            migrationBuilder.DropTable(
+                name: "Graphs");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -6,25 +6,41 @@
 @using Microsoft.AspNetCore.Authorization
 @using Newtonsoft.Json.Linq
 @using PortfolioTracker.Components.Shared
+@using PortfolioTracker.Context
 
+@inject NavigationManager Navigation
 @inject CurrencyProvider CurrencyProvider;
 @inject CurrencyListProvider CurrencyListProvider;
+@inject GraphProvider GraphProvider;
+@inject PortfolioValueService PortfolioValueService
+@inject PortfolioValueGraph PortfolioValueGraph;
 
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
-<ApexChart TItem="MyData" Title="Portfolio Value History">
-    <!-- Define Series and Add Marker Configuration -->
-    <ApexPointSeries TItem="MyData"
-                Items="Data"
-                Name="Portfolio Value"
-                XValue="e => e.Category"
-                YValue="e => e.Value" />
+<h1 class="text-center display-3 mt-2">
+    <span style="color: #007bff; font-weight: bold;">Total balance: </span>
+    <span style="color: white; font-weight: bold; background-color: #007bff; padding: 0 10px; border-radius: 5px;">
+        @($"${Math.Round(totalValue, 2)}")
+    </span>
+</h1>
 
-</ApexChart>
+<div style="display: flex; justify-content: center; align-items: center;" class="mt-3">
+    <button @onclick="InvokeSavePortfolioValue"
+            style="color: white;
+                   background-color: #007bff;
+                   font-weight: bold;
+                   padding: 10px 20px;
+                   border: none;
+                   border-radius: 5px;
+                   cursor: pointer;
+                   transition: background-color 0.3s;">
+        Save Current Portfolio Value
+    </button>
+</div>
 
-<h1 class="d-flex justify-content-end">Total balance: @($"${Math.Round(totalValue, 2)}")</h1>
+<PortfolioValueGraph @ref="portfolioValueGraph" />
 
 @if (showBtn)
 {
@@ -127,40 +143,33 @@
 </table>
 
 @code {
+    private PortfolioValueGraph? portfolioValueGraph;
+
+    private async Task InvokeSavePortfolioValue()
+    {
+        if (portfolioValueGraph != null)
+        {
+            await portfolioValueGraph.SavePortfolioValueAsync();
+            if (portfolioValueGraph.isDuplicate == false)
+            {
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
+        }
+    }
+
     private bool showForm = true;
     private bool showBtn = false;
 
-    private decimal totalValue => currencyLists?.Where(c => c.Currency != null && c.Transaction != null)
-        .Sum(c =>
-        {
-            decimal livePrice = livePrices.ContainsKey(c.Currency.CurrencyName)
-                ? System.Convert.ToDecimal(livePrices[c.Currency.CurrencyName])
-                : 0;
-            return livePrice > 0 ? (c.Transaction.BuyingAmount / c.Transaction.BuyingPrice) * livePrice : 0;
-        }) ?? 0;
-
-    private void ShowForm()
-    {
-        showForm = true;
-        showBtn = false;
-    }
-
-    private async Task HandleFormClose(bool isClosed)
-    {
-        showForm = false;
-        showBtn = true;
-    }
-
-    private CurrencyForm currencyForm;
-
-    private IEnumerable<Currency> currencies;
-    private IEnumerable<CurrencyList> currencyLists;
-    private Dictionary<string, string> livePrices = new Dictionary<string, string>();
+    private decimal totalValue => PortfolioValueService.CalculateTotalValue(currencyLists, livePrices);
 
     protected override async Task OnInitializedAsync()
     {
         await LoadCurrencies();
     }
+
+    private IEnumerable<Currency> currencies;
+    private IEnumerable<CurrencyList> currencyLists;
+    private Dictionary<string, string> livePrices = new Dictionary<string, string>();
 
     private async Task LoadCurrencies()
     {
@@ -191,11 +200,25 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-                // await websocket.ConnectAsync(CancellationToken.None);
+                await websocket.ConnectAsync(CancellationToken.None);
             }
         }
 
         StateHasChanged();
+    }
+
+    private CurrencyForm currencyForm;
+
+    private void ShowForm()
+    {
+        showForm = true;
+        showBtn = false;
+    }
+
+    private async Task HandleFormClose(bool isClosed)
+    {
+        showForm = false;
+        showBtn = true;
     }
 
     private async Task RemoveCurrency(int currencyListId)
@@ -224,21 +247,5 @@
             // Trigger UI update to reflect the newly set model
             StateHasChanged();
         }
-    }
-
-    private List<MyData> Data { get; set; } = new();
-
-    protected override void OnInitialized()
-    {
-        Data.Add(new MyData { Category = "Jan", NetProfit = 12, Value = 33 });
-        Data.Add(new MyData { Category = "Feb", NetProfit = 43, Value = 42 });
-        Data.Add(new MyData { Category = "Mar", NetProfit = 112, Value = 23 });
-    }
-
-    public class MyData
-    {
-        public string Category { get; set; }
-        public int NetProfit { get; set; }
-        public int Value { get; set; }
     }
 }

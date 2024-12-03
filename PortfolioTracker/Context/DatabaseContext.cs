@@ -12,6 +12,8 @@ namespace PortfolioTracker.Context
         public DbSet<CurrencyList> CurrencyLists { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
 
+        public DbSet<Graph> Graphs { get; set; }
+
         //protected override void OnConfiguring(DbContextOptionsBuilder optionbuilder)
         //{
         //    var folder = Environment.SpecialFolder.MyDocuments;

@@ -1,0 +1,158 @@
+﻿@using ApexCharts
+@using Binance.Spot
+@using Newtonsoft.Json.Linq
+@using PortfolioTracker.Context
+
+@inject CurrencyListProvider CurrencyListProvider;
+@inject CurrencyProvider CurrencyProvider;
+@inject GraphProvider GraphProvider;
+
+@if (isDuplicate)
+{
+    <p class="text-danger" style="display: flex; justify-content: center; align-items: center;">You have already updated your portfolio value today</p>
+}
+
+<ApexChart TItem="MyData" Title="Portfolio Value History">
+    <!-- Define Series and Add Marker Configuration -->
+    <ApexPointSeries TItem="MyData"
+                Items="Data"
+                Name="Portfolio Value"
+                XValue="e => e.Date"
+                YValue="e => e.Value" 
+                Color="cyan"
+                ShowDataLabels=true/>
+</ApexChart>
+
+@code {
+    private IEnumerable<Graph> graphs;
+    private List<MyData> Data { get; set; } = new();
+    public bool isDuplicate = false;
+
+    public class MyData
+    {
+        public string Date { get; set; }
+        public decimal Value { get; set; }
+    }
+
+    // public async Task SavePortfolioValueAsync()
+    // {
+    //     decimal capturedTotalValue = totalValue;
+
+    //     var graphEntry = new Graph
+    //         {
+    //             Value = Math.Round(capturedTotalValue, 2),
+    //             Date = DateTime.UtcNow
+    //         };
+
+    //     await GraphProvider.AddGraphAsync(graphEntry);
+
+    //     await InvokeAsync(LoadPoints);
+    // }
+
+    public async Task SavePortfolioValueAsync()
+    {
+        decimal capturedTotalValue = totalValue;
+
+        // Format the current date to match the format used in the chart (e.g., "02-Dec")
+        string formattedDate = DateTime.UtcNow.ToString("dd-MMM");
+
+        // Check if a value already exists for the current date in the Data list
+        if (Data.Any(d => d.Date == formattedDate))
+        {
+            // If the date already exists, output a message
+            isDuplicate = true;
+            return;
+        }
+
+        var graphEntry = new Graph
+            {
+                Value = Math.Round(capturedTotalValue, 2),
+                Date = DateTime.UtcNow
+            };
+
+        await GraphProvider.AddGraphAsync(graphEntry);
+
+        // Add the new data to the Data list
+        Data.Add(new MyData
+            {
+                Date = formattedDate,
+                Value = graphEntry.Value
+            });
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task LoadPoints()
+    {
+        foreach (var graph in graphs)
+        {
+            // Format the DateTime as "dd-MMM" (e.g., "01-Jan") when assigning it to Data
+            Data.Add(new MyData
+                {
+                    Date = graph.Date.ToString("dd-MMM"), // Format the DateTime to "01-Jan"
+                    Value = graph.Value
+                });
+        }
+    }
+
+    private IEnumerable<Currency> currencies;
+    private IEnumerable<CurrencyList> currencyLists;
+    private Dictionary<string, string> livePrices = new Dictionary<string, string>();
+
+    private async Task LoadCurrencies()
+    {
+        currencyLists = await CurrencyListProvider.GetAllCurrencyListsAsync();
+        currencies = await CurrencyProvider.GetAllCurrenciesAsync();
+
+        foreach (var currency in currencies)
+        {
+            if (!livePrices.ContainsKey(currency.CurrencyName))
+            {
+                var currencyName = currency.CurrencyName.ToLower(); // currency names stored in the database
+                var websocket = new MarketDataWebSocket($"{currencyName}usdt@aggTrade"); // request data about those currencies
+
+                websocket.OnMessageReceived(async (data) =>
+                {
+                    JObject jsonData = JObject.Parse(data);
+                    var livePriceString = (string)jsonData["p"]; // p stands for price so only price is fetched
+
+                    if (decimal.TryParse(livePriceString, out var livePrice))
+                    {
+                        decimal roundedLivePrice = livePrice >= 1 // rounds the prices up
+                            ? Math.Round(livePrice, 2)
+                            : livePrice >= 0.01M ? Math.Round(livePrice, 4) : Math.Round(livePrice, 8);
+
+                        livePrices[currency.CurrencyName] = roundedLivePrice.ToString();
+                    }
+
+                    await InvokeAsync(StateHasChanged);
+                }, CancellationToken.None);
+
+                await websocket.ConnectAsync(CancellationToken.None);
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private decimal totalValue => currencyLists?.Where(c => c.Currency != null && c.Transaction != null)
+        .Sum(c =>
+        {
+            decimal livePrice = livePrices.ContainsKey(c.Currency.CurrencyName)
+                ? System.Convert.ToDecimal(livePrices[c.Currency.CurrencyName])
+                : 0;
+            return livePrice > 0 ? (c.Transaction.BuyingAmount / c.Transaction.BuyingPrice) * livePrice : 0;
+        }) ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        graphs = await GraphProvider.GetAllGraphsAsync(); // Await the async call
+
+        Data.Add(new MyData { Date = "29-Nov", Value = 12820.13M });
+        Data.Add(new MyData { Date = "30-Nov", Value = 8820.13M });
+        Data.Add(new MyData { Date = "01-Dec", Value = 9820.13M });
+
+        await LoadPoints();
+        await LoadCurrencies();
+    }
+}

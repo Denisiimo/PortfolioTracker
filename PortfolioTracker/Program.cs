@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using PortfolioTracker.Components.Account;
 using PortfolioTracker.Context;
 using PortfolioTracker.Model;
+using PortfolioTracker.Components.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<CurrencyProvider>();
 builder.Services.AddScoped<CurrencyListProvider>();
 builder.Services.AddScoped<TransactionProvider>();
+builder.Services.AddScoped<GraphProvider>();
 builder.Services.AddScoped<DatabaseSeeder>();
+builder.Services.AddScoped<PortfolioValueService>();
+builder.Services.AddScoped<PortfolioValueGraph>();
+
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

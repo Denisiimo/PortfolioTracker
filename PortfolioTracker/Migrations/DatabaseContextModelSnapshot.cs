@@ -186,6 +186,23 @@ namespace PortfolioTracker.Migrations
                     b.ToTable("CurrencyLists");
                 });
 
+            modelBuilder.Entity("PortfolioTracker.Model.Graph", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Graphs");
+                });
+
             modelBuilder.Entity("PortfolioTracker.Model.Transaction", b =>
                 {
                     b.Property<int>("Id")
