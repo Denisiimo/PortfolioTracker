@@ -215,6 +215,10 @@ namespace PortfolioTracker.Migrations
                     b.Property<decimal>("BuyingPrice")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CurrencyName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("TEXT");
 

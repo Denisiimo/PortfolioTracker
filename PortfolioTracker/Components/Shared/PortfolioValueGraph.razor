@@ -113,7 +113,7 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-                // await websocket.ConnectAsync(CancellationToken.None);
+                await websocket.ConnectAsync(CancellationToken.None);
             }
         }
 

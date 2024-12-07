@@ -83,6 +83,7 @@ namespace PortfolioTracker.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    CurrencyName = table.Column<string>(type: "TEXT", nullable: false),
                     Side = table.Column<string>(type: "TEXT", nullable: false),
                     BuyingAmount = table.Column<decimal>(type: "TEXT", nullable: false),
                     BuyingPrice = table.Column<decimal>(type: "TEXT", nullable: false),

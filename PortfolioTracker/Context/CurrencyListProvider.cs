@@ -52,10 +52,10 @@ namespace PortfolioTracker.Model
             if (currencyList != null)
             {
                 // Remove linked transactions
-                if (currencyList.Transaction != null)
-                {
-                    _context.Transactions.Remove(currencyList.Transaction);
-                }
+                //if (currencyList.Transaction != null)
+                //{
+                //    _context.Transactions.Remove(currencyList.Transaction);
+                //}
 
                 // Remove linked currency
                 if (currencyList.Currency != null)

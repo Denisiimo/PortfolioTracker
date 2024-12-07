@@ -132,17 +132,18 @@
         else
         {
             // Create new instances for Transaction and Currency
+            var currency = new Currency
+                {
+                    CurrencyName = Model.CurrencyName
+                };
+
             var transaction = new Transaction
                 {
+                    CurrencyName = Model.CurrencyName,
                     Side = Model.Side,
                     BuyingAmount = Model.BuyingAmount,
                     BuyingPrice = Model.BuyingPrice,
                     Date = DateTime.Now
-                };
-
-            var currency = new Currency
-                {
-                    CurrencyName = Model.CurrencyName
                 };
 
             // Create CurrencyList to associate Currency and Transaction

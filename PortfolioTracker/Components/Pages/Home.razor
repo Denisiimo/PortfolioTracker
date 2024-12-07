@@ -10,6 +10,7 @@
 
 @inject NavigationManager Navigation
 @inject CurrencyProvider CurrencyProvider;
+@inject TransactionProvider TransactionProvider;
 @inject CurrencyListProvider CurrencyListProvider;
 @inject GraphProvider GraphProvider;
 @inject PortfolioValueService PortfolioValueService
@@ -200,7 +201,7 @@
                     await InvokeAsync(StateHasChanged);
                 }, CancellationToken.None);
 
-                // await websocket.ConnectAsync(CancellationToken.None);
+                await websocket.ConnectAsync(CancellationToken.None);
             }
         }
 
@@ -223,6 +224,20 @@
 
     private async Task RemoveCurrency(int currencyListId)
     {
+        var currencyList = await CurrencyListProvider.GetCurrencyListByIdAsync(currencyListId);
+        if (currencyList != null)
+        {
+            var sellTransaction = new Transaction
+                {
+                    Side = "Sell",
+                    BuyingAmount = -currencyList.Transaction.BuyingAmount, // Negative to indicate selling
+                    BuyingPrice = currencyList.Transaction.BuyingPrice,
+                    CurrencyName = currencyList.Currency.CurrencyName, // Capture the currency name
+                    Date = DateTime.Now
+                };
+
+            await TransactionProvider.AddTransactionAsync(sellTransaction);
+        }
         await CurrencyListProvider.RemoveCurrencyListAsync(currencyListId);
         await LoadCurrencies();
     }

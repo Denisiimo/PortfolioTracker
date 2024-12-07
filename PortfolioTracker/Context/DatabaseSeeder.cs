@@ -32,17 +32,17 @@ namespace PortfolioTracker.Context
                 new CurrencyList
                 {
                     Currency = new Currency { CurrencyName = "BTC" },
-                    Transaction = new Transaction { BuyingAmount = 4000, BuyingPrice = 45000, Side = "Buy", Date = DateTime.Now }
+                    Transaction = new Transaction { CurrencyName = "BTC", BuyingAmount = 4000, BuyingPrice = 45000, Side = "Buy", Date = DateTime.Now }
                 },
                 new CurrencyList
                 {
                     Currency = new Currency { CurrencyName = "SOL" },
-                    Transaction = new Transaction { BuyingAmount = 1000, BuyingPrice = 130, Side = "Buy", Date = DateTime.Now }
+                    Transaction = new Transaction { CurrencyName = "SOL", BuyingAmount = 1000, BuyingPrice = 130, Side = "Buy", Date = DateTime.Now }
                 },
                 new CurrencyList
                 {
                     Currency = new Currency { CurrencyName = "ARB" },
-                    Transaction = new Transaction { BuyingAmount = 300, BuyingPrice = 1.2M, Side = "Buy", Date = DateTime.Now }
+                    Transaction = new Transaction { CurrencyName = "ARB", BuyingAmount = 300, BuyingPrice = 1.2M, Side = "Buy", Date = DateTime.Now }
                 }
             };
         }
