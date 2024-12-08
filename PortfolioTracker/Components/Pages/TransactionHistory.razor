@@ -3,7 +3,6 @@
 @inject TransactionProvider TransactionProvider;
 
 
-@* Transaction Title *@
 <h3 class="transaction-title">Transaction History</h3>
 
 @* Transaction Table *@
@@ -11,27 +10,66 @@
     <thead>
         <tr>
             <th>Currency Name</th>
-            <th>Amount</th>
-            <th>Side</th>
+            <th>
+                <button class="sort-button" @onclick="() => SortBy(amount)">
+                    Amount @SortIndicator("Amount")
+                </button>
+            </th>
+            <th>
+                <button class="sort-button" @onclick="() => SortBy(side)">
+                    Side @SortIndicator("Side")
+                </button>
+            </th>
             <th>Buying Price</th>
-            <th>Date</th>
+            <th>
+                <button class="sort-button" @onclick="() => SortBy(date)">
+                    Date @SortIndicator("Date")
+                </button>
+            </th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var transaction in transactions)
+        @if (sortedTransactions != null)
+        {
+            @foreach (var transaction in sortedTransactions)
+            {
+                <tr>
+                    <td>@transaction.CurrencyName</td>
+                    <td>$@transaction.BuyingAmount</td>
+                    <td>@transaction.Side</td>
+                    <td>@transaction.BuyingPrice</td>
+                    <td>@transaction.Date.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        }
+        else
         {
             <tr>
-                <td>@transaction.CurrencyName</td>
-                <td>$@transaction.BuyingAmount</td>
-                <td>@transaction.Side</td>
-                <td>@transaction.BuyingPrice</td>
-                <td>@transaction.Date.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>No transactions yet.</td>
             </tr>
         }
     </tbody>
 </table>
 
+
 <style>
+    .sort-button {
+        background-color: #004080;
+        color: white;
+        border: 1px solid #003060;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font: inherit;
+        text-align: center;
+    }
+
+        .sort-button:hover {
+            background-color: #002050;
+            color: #e0e0e0;
+            border-color: #001530;
+        }
+
     .transaction-title {
         text-align: center;
         font-size: 2rem;
@@ -43,7 +81,7 @@
     .transaction-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 20px auto; /* Center the table */
+        margin: 20px auto;
         font-size: 1rem;
         text-align: left;
     }
@@ -54,7 +92,7 @@
         }
 
         .transaction-table th {
-            background-color: #007BFF; /* Blue accent */
+            background-color: #007BFF;
             color: white;
             font-weight: bold;
         }
@@ -64,17 +102,63 @@
         }
 
         .transaction-table tr:hover {
-            background-color: #e9f5ff; /* Light blue hover effect */
+            background-color: #e9f5ff;
         }
 </style>
 
 
 
 @code {
+    string amount = "Amount";
+    string side = "Side";
+    string date = "Date";
+
     private IEnumerable<Transaction> transactions;
+    private IEnumerable<Transaction> sortedTransactions;
+    private string currentSortColumn = "Date";
+    private bool ascending = true;
 
     protected override async Task OnInitializedAsync()
     {
         transactions = await TransactionProvider.GetAllTransactionsAsync();
+        sortedTransactions = transactions;
+    }
+
+    private void SortBy(string column)
+    {
+        if (currentSortColumn == column)
+        {
+            ascending = !ascending;
+        }
+        else
+        {
+            currentSortColumn = column;
+            ascending = true;
+        }
+
+        sortedTransactions = column switch
+        {
+            "Amount" => ascending
+                ? transactions.OrderBy(t => t.BuyingAmount)
+                : transactions.OrderByDescending(t => t.BuyingAmount),
+            "Side" => ascending
+                ? transactions.OrderBy(t => t.Side)
+                : transactions.OrderByDescending(t => t.Side),
+            "Date" => ascending
+                ? transactions.OrderBy(t => t.Date)
+                : transactions.OrderByDescending(t => t.Date),
+            _ => transactions
+        };
+    }
+
+    private MarkupString SortIndicator(string column)
+    {
+        if (currentSortColumn == column)
+        {
+            var arrow = ascending ? "▲" : "▼";
+            return new MarkupString($"<span>{arrow}</span>");
+        }
+
+        return new MarkupString("");
     }
 }
