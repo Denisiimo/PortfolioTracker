@@ -36,7 +36,7 @@
                 <tr>
                     <td>@transaction.CurrencyName</td>
                     <td>$@transaction.BuyingAmount</td>
-                    <td>@transaction.Side</td>
+                    <td style="background-color: @(transaction.Side == "Buy" ? "lightgreen" : transaction.Side == "Sell" ? "lightcoral" : "white");">@transaction.Side</td>
                     <td>@transaction.BuyingPrice</td>
                     <td>@transaction.Date.ToString("yyyy-MM-dd HH:mm")</td>
                 </tr>
@@ -45,7 +45,7 @@
         else
         {
             <tr>
-                <td>No transactions yet.</td>
+                <td colspan="5">No transactions yet.</td>
             </tr>
         }
     </tbody>
